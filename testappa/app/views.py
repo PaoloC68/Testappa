@@ -20,7 +20,7 @@ grade_naming = {
     'eleventh': '11',
     'twelfth': '12'
 }
-grade_naming_inv = {v: k for k, v in grade_naming.items()}
+grade_naming_inv = dict(zip(grade_naming.values(), grade_naming.keys()))
 
 class IndexView(TemplateView):
     template_name = 'index.html'
