@@ -882,6 +882,18 @@ pre {
      -moz-border-radius: 4px;
           border-radius: 4px;
 }
+.rounded-box {
+  display: block;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
 
 pre.prettyprint {
   margin-bottom: 20px;

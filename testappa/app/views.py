@@ -1,6 +1,7 @@
 # Create your views here.
 from braces.views import LoginRequiredMixin
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.views.generic import TemplateView
 import requests
 
@@ -33,17 +34,25 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
         headers = {'content-type': 'application/json'}
         user = self.request.user
         organization = user.organization
-        api_res = requests.get('http://idp.logintex.me:8088/api/districts/{0}/'.format(organization),
-                               headers=headers).json()
+        api_res = None
+        res = requests.get('http://idp.logintex.me:8088/api/districts/{0}/'.format(organization), headers=headers)
         auth = False
-        for r in api_res['resources']:
-            if r['url'].lower() == settings.RESOURCE_URL.lower() and organization in r['district']:
+        other_res = []
+        sites = map(lambda x: x['domain'], Site.objects.values('domain'))
+        if res.status_code == 200:
+            api_res = res.json()
+            for r in api_res['resources']:
                 if r[grade_naming_inv[user.grade]]:
-                    auth = True
+                    if r['url'].lower() in sites and organization in r['district']:
+                        auth = True
+                    else:
+                        other_res.append(dict(name=r['name'], url=r['url'] ))
 
-        ctx['app_auth'] = auth
-        ctx['api'] = api_res
-        ctx['distict_name'] = api_res['district_name']
-        ctx['resources'] = api_res['resources']
-        ctx['user'] = user
+
+            ctx['app_auth'] = auth
+            ctx['api'] = api_res
+            ctx['distict_name'] = api_res['district_name']
+            ctx['resources'] = api_res['resources']
+            ctx['other_resources'] = other_res
+            ctx['user'] = user
         return ctx
