@@ -40,7 +40,7 @@ class IndexView(TemplateView):
             if self.request.META['HTTP_HOST'] in s.domain:
                 current_site = s
 
-        ctx['sitename'] = current_site.name
+        ctx['sitename'] = current_site.name.lower()
         return ctx
 
 class ProtectedView(LoginRequiredMixin, TemplateView):
@@ -60,7 +60,7 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
             if self.request.META['HTTP_HOST'] in s.domain:
                 current_site = s
 
-        ctx['sitename'] = current_site.name
+        ctx['sitename'] = current_site.name.lower()
         sites = map(lambda x: x['domain'], Site.objects.values('domain'))
         if res.status_code == 200:
             api_res = res.json()
