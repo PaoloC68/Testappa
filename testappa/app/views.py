@@ -23,8 +23,25 @@ grade_naming = {
 }
 grade_naming_inv = dict(zip(grade_naming.values(), grade_naming.keys()))
 
+def current_site(context):
+        current_site = Site.objects.get_current()
+        for s in Site.objects.all():
+            if self.request.META['HTTP_HOST'] in s.domain:
+                current_site = s
+
+
 class IndexView(TemplateView):
     template_name = 'index.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super(IndexView, self).get_context_data(**kwargs)
+        current_site = Site.objects.get_current()
+        for s in Site.objects.all():
+            if self.request.META['HTTP_HOST'] in s.domain:
+                current_site = s
+
+        ctx['sitename'] = current_site.name
+        return ctx
 
 class ProtectedView(LoginRequiredMixin, TemplateView):
     template_name = 'protected.html'
@@ -38,6 +55,12 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
         res = requests.get('http://idp.logintex.me:8088/api/districts/{0}/'.format(organization), headers=headers)
         auth = False
         other_res = []
+        current_site = Site.objects.get_current()
+        for s in Site.objects.all():
+            if self.request.META['HTTP_HOST'] in s.domain:
+                current_site = s
+
+        ctx['sitename'] = current_site.name
         sites = map(lambda x: x['domain'], Site.objects.values('domain'))
         if res.status_code == 200:
             api_res = res.json()
@@ -51,7 +74,7 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
 
             ctx['app_auth'] = auth
             ctx['api'] = api_res
-            ctx['distict_name'] = api_res['district_name']
+            ctx['district_name'] = api_res['district_name']
             ctx['resources'] = api_res['resources']
             ctx['other_resources'] = other_res
             ctx['user'] = user

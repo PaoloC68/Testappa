@@ -13,6 +13,8 @@
         {% endblock meta-tags %}
 
         {% block style-libraries %}
+        <link rel="stylesheet" href="{{ STATIC_URL }}bootstrap_base/css/{{ sitename }}.css">
+
         <link rel="stylesheet" href="{% static 'bootstrap_base/css/bootstrap.css' %}">
         <style>
             body {
@@ -40,7 +42,8 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </a>
-                    <a class="brand" href="#">Project name</a>
+                    <a class="brand" href="/"><img src="{{ STATIC_URL }}{{ sitename }}_sm.png"> </a>
+
                     <div class="nav-collapse collapse">
                         <ul class="nav">
                             <li class="active"><a href="#">Home</a></li>

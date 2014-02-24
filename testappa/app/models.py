@@ -99,21 +99,14 @@ class TeaUser(AbstractBaseUser):
         authenticated in templates.
         """
         return True
-    def get_all_permissions(self, obj=None):
 
-        if not hasattr(self, '_perm_cache'):
-            r = Role.objects.get_by_natural_key(self.role)
-            self._perm_cache = set(["%s.%s" % (p.content_type.app_label, p.codename) for p in r.permissions.all()])
-        return self._perm_cache
 
     def has_perm(self, perm, obj=None):
 
         # Active superusers have all permissions.
         if self.is_active and self.is_superuser:
             return True
-        if perm in self.get_all_permissions():
-            return True
-        return False
+        return True
 
     def has_perms(self, perm_list, obj=None):
 
@@ -131,10 +124,7 @@ class TeaUser(AbstractBaseUser):
         if self.is_active and self.is_superuser:
             return True
 
-        for perm in self.get_all_permissions(set):
-            if perm[:perm.index('.')] == app_label:
-                return True
-        return False
+        return True
 
     def get_full_name(self):
         """
