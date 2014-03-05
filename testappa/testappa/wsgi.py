@@ -14,6 +14,14 @@ framework.
 
 """
 import os
+import sys
+from os.path import dirname
+activate_this = os.getenv('ACTIVATE_THIS', '/root/Envs/texedu/bin/activate_this.py')
+execfile(activate_this, dict(__file__=activate_this))
+
+
+sys.path.append(dirname(dirname(__file__)))
+sys.path.append(dirname(__file__))
 
 # We defer to a DJANGO_SETTINGS_MODULE already in the environment. This breaks
 # if running multiple sites in the same mod_wsgi process. To fix this, use
