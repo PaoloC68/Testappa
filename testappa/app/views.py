@@ -52,7 +52,7 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         organization = user.organization
         api_res = None
-        res = requests.get('http://idp.logintex.me:8088/api/districts/{0}/'.format(organization), headers=headers)
+        res = requests.get('http://admin.logintex.me/api/districts/{0}/'.format(organization), headers=headers)
         auth = False
         other_res = []
         current_site = Site.objects.get_current()
@@ -66,10 +66,10 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
             api_res = res.json()
             for r in api_res['resources']:
                 if r[grade_naming_inv[user.grade]]:
-                    if r['url'].lower() in sites and organization in r['district']:
-                        auth = True
-                    else:
-                        other_res.append(dict(name=r['name'], url=r['url'] ))
+                    if (r['teacher'] and user.role.lower() == 'teacher') or (r['student'] and user.role.lower() == 'student'):
+                        other_res.append(dict(name=r['name'], url=r['url']))
+                        if current_site.name.lower() in r['name'].lower():
+                            auth = True
 
 
             ctx['app_auth'] = auth
