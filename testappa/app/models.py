@@ -21,6 +21,7 @@ class TeaUser(AbstractBaseUser):
             validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'), 'invalid')
         ])
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    middle_name = models.CharField(_('middle name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     common_name = models.CharField(max_length=255, blank=True, default='')
     date_of_birth = models.DateField(null=True)
@@ -29,17 +30,17 @@ class TeaUser(AbstractBaseUser):
     school = models.CharField(max_length=40, blank=True)
     state_id = models.CharField(max_length=40, blank=True)
     sis_id = models.CharField(max_length=40, blank=True)
-    grade = models.CharField(max_length=5, blank=True)
+    person_id = models.CharField(max_length=40, blank=True, null=True)
+    staff_id = models.CharField(max_length=40, blank=True, null=True)
+    grade = models.TextField()
     status = models.CharField(max_length=10, choices=STATUS, default=STATUS.active)
-    role = models.CharField(max_length=40, default='student')
-    manager = models.CharField(max_length=10, choices=TRUE_FALSE, default=TRUE_FALSE.false)
+    role = models.CharField(default='student', max_length=255)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
 
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
-
 
     class Meta:
         swappable = 'AUTH_USER_MODEL'
@@ -65,7 +66,7 @@ class TeaUser(AbstractBaseUser):
     @property
     def is_superuser(self):
         try:
-            if self.manager.lower() == 'true':
+            if self.role.lower() == 'superuser':
                 return True
         except Exception:
             pass
@@ -74,7 +75,8 @@ class TeaUser(AbstractBaseUser):
     @is_superuser.setter
     def is_superuser(self, value):
         if value:
-            self.manager = TRUE_FALSE.true
+            self.role = 'superuser'
+            self.save()
 
     def get_username(self):
         "Return the identifying username for this User"

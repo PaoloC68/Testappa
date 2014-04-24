@@ -1,30 +1,46 @@
 #-*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-from requests import HTTPError
-
+from django.conf import settings
 from social.backends.oauth import BaseOAuth2
-from social.exceptions import AuthMissingParameter, AuthCanceled
+import requests
 
 class GluuOidc(BaseOAuth2):
-    """Gluu authentication backend"""
+    """Gluu authentication backend
+    It uses OIC discover but if discover fails tries to guess the endpoints
+    """
     name = 'gluu-oidc'
     REDIRECT_STATE = False
-    AUTHORIZATION_URL = 'https://idp.logintex.me/oxauth/seam/resource/restv1/oxauth/authorize'
-    ACCESS_TOKEN_URL = 'https://idp.logintex.me/oxauth/seam/resource/restv1/oxauth/token'
-    ACCESS_TOKEN_METHOD = 'POST'
-    REVOKE_TOKEN_URL = 'https://idp.logintex.me/oxauth/seam/resource/restv1/oxauth/revoke'
-    REVOKE_TOKEN_METHOD = 'GET'
-    DEFAULT_SCOPE = ['openid',
-                     'profile',
-                     'email',
-                     'teainfo']
+    BASE_OIC_URL = getattr(settings, 'BASE_OIC_URL', 'https://localhost')
+    discover_dict = {}
+    try:
+        headers = {'content-type': 'application/json'}
+        discover = requests.get('{0}/.well-known/openid-configuration'.format(BASE_OIC_URL), headers=headers)
+        if discover.status_code == 200:
+            discover_dict = discover.json()
+    except Exception:
+        pass
+
+    AUTHORIZATION_URL = discover_dict.get('authorization_endpoint',
+                                          BASE_OIC_URL + '/oxauth/seam/resource/restv1/oxauth/authorize')
+    ACCESS_TOKEN_URL = discover_dict.get('token_endpoint',
+                                         BASE_OIC_URL + '/oxauth/seam/resource/restv1/oxauth/token')
+    USERINFO_URL = discover_dict.get('userinfo_endpoint',
+                                      BASE_OIC_URL + '/oxauth/seam/resource/restv1/oxauth/userinfo')
+    ACCESS_TOKEN_METHOD = getattr(settings, 'ACCESS_TOKEN_METHOD', 'POST')
+    REVOKE_TOKEN_URL = BASE_OIC_URL + '/oxauth/seam/resource/restv1/oxauth/revoke'
+    REVOKE_TOKEN_METHOD = getattr(settings, 'REVOKE_TOKEN_METHOD', 'GET')
+    if getattr(settings, 'DEFAULT_SCOPE', ''):
+        DEFAULT_SCOPE = getattr(settings, 'DEFAULT_SCOPE')
+    else:
+        DEFAULT_SCOPE = discover_dict.get('scopes_supported', ['openid', 'profile', 'email'])
     STATE_PARAMETER = False
     EXTRA_DATA = [
         ('refresh_token', 'refresh_token', True),
         ('expires_in', 'expires'),
         ('token_type', 'token_type', True)
     ]
+
     def get_user_id(self, details, response):
         if self.setting('USE_UNIQUE_USER_ID', False):
             return response['username']
@@ -33,29 +49,16 @@ class GluuOidc(BaseOAuth2):
 
     def get_user_details(self, response):
         email = response.get('email', '')
-        return { # 'username': email.split('@', 1)[0],
-                'email': email,
-                'organization': response.get(b'teaOrganizationID', ''),
-                'school': response.get(b'teaSchoolID', ''),
-                'username': response.get(b'sub', ''),
-                'state_id': response.get(b'teaStateUniqueID', ''),
-                'sis_id': response.get(b'teaSISid', ''),
-                'grade': response.get(b'teaGrade', ''),
-                'first_name': response.get(b'given_name', ''),
-                'last_name': response.get(b'family_name', ''),
-                'common_name': response.get(b'cn', ''),
-                'date_of_birth': response.get(b'teaDateOfBirth', ''),
-                'role': response.get(b'teaRole', ''),
-                'manager': response.get(b'teaAppManager', ''),
-                'fullname': response.get('name', ''),}
-                # 'first_name': response.get('given_name', ''),
-                # 'last_name': response.get('family_name', '')}
+        details = {'email': email}
+        for f, c in getattr(settings, 'USER_FIELDS_CLAIMS_MAP', []):
+            details.update({f: response.get(str(c), '')})
+        return details
 
     def user_data(self, access_token, *args, **kwargs):
         """Return user data """
         return self.get_json(
-            'https://idp.logintex.me/oxauth/seam/resource/restv1/oxauth/userinfo',
-            params={'access_token': access_token, 'scope': 'openid teainfo profile'}
+            self.USERINFO_URL,
+            params={'access_token': access_token, 'scope': ' '.join(self.DEFAULT_SCOPE)}
         )
 
 
@@ -64,9 +67,3 @@ class GluuOidc(BaseOAuth2):
 
     def revoke_token_headers(self, token, uid):
         return {'Content-type': 'application/json'}
-
-
-
-
-
-

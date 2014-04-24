@@ -63,7 +63,6 @@ Thumbs.db
 *.ipynb
 
 .hg/*
-*.db
 
 /requirements_new.txt
 

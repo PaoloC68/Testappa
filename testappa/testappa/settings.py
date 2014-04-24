@@ -146,9 +146,35 @@ INSTALLED_APPS = (
 )
 
 
-SOCIAL_AUTH_GLUU_OIDC_KEY = b'@!DA85.5F98.95A1.CA3B!0001!5FD3.3646!0008!FE1F.FA3A'
-SOCIAL_AUTH_GLUU_OIDC_SECRET = b'fd440f15-1711-4fa2-94ed-d4e03e0d4592'
+SOCIAL_AUTH_GLUU_OIDC_KEY = os.getenv('SOCIAL_AUTH_GLUU_OIDC_KEY',
+                                      b'@!DA85.5F98.95A1.CA3B!0001!5FD3.3646!0008!FD9F.7302')
+SOCIAL_AUTH_GLUU_OIDC_SECRET = os.getenv('SOCIAL_AUTH_GLUU_OIDC_SECRET',
+                                         b'see env var')
 
+ACCESS_TOKEN_METHOD = os.getenv('ACCESS_TOKEN_METHOD', 'POST')
+
+BASE_OIC_URL = os.getenv('BASE_OIC_URL', 'https://idp.texaspass.org')
+
+BASE_API_URL = os.getenv('BASE_API_URL', 'http://admin.texaspass.org/api/')
+
+DEFAULT_SCOPE = ['openid', 'profile', 'email', 'teainfo']
+
+USER_FIELDS_CLAIMS_MAP = [
+    ('organization', 'teaDistrictID'),
+    ('school', 'teaCampusID'),
+    ('username', 'sub'),
+    ('state_id', 'teaStudentStateUniqueID'),
+    ('sis_id', 'teaDistrictUsername'),
+    ('person_id', 'teaDistrictPersonIdentifier'),
+    ('staff_id', 'teaStaffUniqueStateID'),
+    ('grade', 'teaGrade'),
+    ('first_name', 'given_name'),
+    ('middle_name', 'teaMiddleName'),
+    ('last_name', 'sn'),
+    ('common_name', 'cn'),
+    ('date_of_birth', 'teaDateOfBirth'),
+    ('role', 'teaRole'),
+]
 #SOCIAL_AUTH_GLUU_OIDC_AUTH_EXTRA_ARGUMENTS = {'prompt': 'consent'}
 
 AUTH_USER_MODEL = 'app.TeaUser'
