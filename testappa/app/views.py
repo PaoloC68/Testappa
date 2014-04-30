@@ -81,6 +81,7 @@ class ProtectedView(LoginRequiredMixin, TemplateView):
 
 
             ctx['app_auth'] = auth
+            ctx['styled_sites'] = ['wiggliwords', 'blooming', 'digibunnies']
             ctx['api'] = api_res
             ctx['district_name'] = api_res['district_name']
             ctx['resources'] = api_res['resources']
